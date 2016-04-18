@@ -9,12 +9,12 @@ import logging
 class QuaggaConfig(object):
     current_networks = set()
     def __init__(self):
-        self.host = '10.60.0.114'
-        self.user = 'icmrsu'
-        self.secret = 'gr@peb1ke'
-        self.port = 22
+        self.ssh_host = '10.60.0.114'
+        self.ssh_user = 'icmrsu'
+        self.ssh_secret = 'gr@peb1ke'
+        self.ssh_port = 22
         self.conf_file_path = '/etc/quagga/bgpd.conf'
-        #logging.basicConfig(format=u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s', level=logging.INFO)
+
         # Зададим параметры логгирования
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
@@ -34,7 +34,7 @@ class QuaggaConfig(object):
         """
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname=self.host, username=self.user, password=self.secret, port=self.port)
+        client.connect(hostname=self.ssh_host, username=self.ssh_user, password=self.ssh_secret, port=self.ssh_port)
         sftp = client.open_sftp()
 
         # Считываем из файла конфигурации имеюшиеся сети
@@ -50,21 +50,52 @@ class QuaggaConfig(object):
 
     def telnet_call(self):
         # Подключаемся к виртуальному маршрутизатору
-        host = '10.60.0.114'
-        port = '2605'
-        user = r'mrsu'
-        password = r'gr@peb1ke'
-        telnet = telnetlib.Telnet(host, port, 3)
+        quagga_host = '10.60.0.114'
+        quagga_port = '2605'
+        quagga_password = r'gr@peb1ke'
+        telnet = telnetlib.Telnet(quagga_host, quagga_port, 3)
         telnet.read_until('Password: ', 3)
-        telnet.write(password + '\r\n')
+        telnet.write(quagga_password + '\r\n')
         telnet.expect([re.compile('.*>\s'), ], 3)
         telnet.write('en' + '\r\n')
         telnet.read_until('Password: ', 3)
-        telnet.write(password + '\r\n')
+        telnet.write(quagga_password + '\r\n')
         telnet.expect([re.compile('.*#\s'), ], 3)
         telnet.write('term len 0' + '\r\n')
         telnet.expect([re.compile('.*#\s'), ], 3)
         return telnet
 
-q = QuaggaConfig()
-q.read_current_networks()
+    def add_bgp_networks(self, set_of_networks):
+        net_mask = '32'
+        telnet = self.telnet_call()
+        telnet.write("conf t\r")
+        telnet.write("router bgp 8941\r\n")
+        telnet.expect([re.compile('.*#\s'), ], 3)
+        for network in set_of_networks:
+            telnet.write("network " + network + "/" + net_mask + "\r")
+            telnet.expect([re.compile('.*#\s'), ], 10)
+            self.logger.info("added to quagga bgp network %s/%s" % (network, net_mask))
+        telnet.write("end\r")
+        telnet.write("write\r")
+        telnet.close()
+
+    def delete_bgp_networks(self, set_of_networks):
+        net_mask = '32'
+        telnet = self.telnet_call()
+        telnet.write("conf t\r")
+        telnet.write("router bgp 8941\r\n")
+        telnet.expect([re.compile('.*#\s'), ], 3)
+        for network in set_of_networks:
+            telnet.write("no network " + network + "/" + net_mask + "\r")
+            telnet.expect([re.compile('.*#\s'), ], 10)
+            self.logger.info('deleted from quagga bgp network %s/%s' % (network, net_mask))
+        telnet.write("end\r")
+        telnet.write("write\r")
+        telnet.close()
+
+
+
+#q = QuaggaConfig()
+#q.read_current_networks()
+#q.add_bgp_networks({'0.1.1.1', '0.1.1.2'})
+#q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
