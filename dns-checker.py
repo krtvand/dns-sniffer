@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python
 
+LOCAL_DNS_SERVERS = {'10.73.73.73', '10.73.10.73'}
+
 import logging
 import socket
 
@@ -43,9 +45,13 @@ def callback(ch, method, properties, body):
         if r.sismember('domains', name):
             for rr in dns.an:
                 if rr.type == dpkt.dns.DNS_A:
-                    r.sadd(name, socket.inet_ntoa(rr.ip))
-                    logger.info('Found IP address %s for domain from ZapretInfo: %s' % (socket.inet_ntoa(rr.ip), rr.name))
-                    #print rr.name, socket.inet_ntoa(rr.ip)
+                    ip_addr = socket.inet_ntoa(rr.ip)
+                    # В сети университета действует система блокировки доступа
+                    # к ресурсам по DNS, поэтому могут возникать DNS ответы
+                    # с адресами локальных DNS-серверов
+                    if ip_addr not in LOCAL_DNS_SERVERS:
+                        r.sadd(name, socket.inet_ntoa(rr.ip))
+                        logger.info('Found IP address %s for domain from ZapretInfo: %s' % (socket.inet_ntoa(rr.ip), rr.name))
 
 channel.basic_consume(callback, queue='dns', no_ack=True)
 channel.start_consuming()
