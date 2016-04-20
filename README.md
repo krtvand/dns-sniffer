@@ -10,4 +10,5 @@ DNS sniffer for learning IP address of Zapret Info sites
     pypcap - https://pypi.python.org/pypi/pypcap
     pika - https://pypi.python.org/pypi/pika
     dpkt - https://pypi.python.org/pypi/dpkt
+    paramiko - https://pypi.python.org/pypi/paramiko/
 
