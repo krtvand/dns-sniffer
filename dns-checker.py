@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python
+
+import logging
+import socket
 
 import pika
 import dpkt
-import socket
 import redis
-import logging
+
 
 # Зададим параметры логгирования
 logger = logging.getLogger(__name__)

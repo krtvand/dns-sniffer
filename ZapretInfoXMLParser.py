@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python
 
 #DUMP_FILE_PATH = '/home/andrew/dump.xml'
 
 import xml.etree.ElementTree as etree
 from urlparse import urlparse
-import urllib
 import re
 
 

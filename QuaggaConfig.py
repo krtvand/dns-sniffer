@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python
 
-import paramiko
+import logging
 import re
 import telnetlib
-import logging
+
+import paramiko
+
 
 class QuaggaConfig(object):
     current_networks = set()

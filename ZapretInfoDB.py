@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
+#!/usr/bin/python
 
 import logging
-import redis
+
 import paramiko
+import redis
+
 from ZapretInfoXMLParser import ZapretInfoXMLParser
 from QuaggaConfig import QuaggaConfig
 

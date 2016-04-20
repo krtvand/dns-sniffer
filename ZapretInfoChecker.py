@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 #!/usr/bin/python
 
+import logging
+
+import paramiko
 import requests
 from requests.exceptions import RequestException
-import paramiko
-import logging
 
 from ZapretInfoXMLParser import ZapretInfoXMLParser
 
