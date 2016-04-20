@@ -13,7 +13,7 @@ import redis
 
 # Зададим параметры логгирования
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 formatter = logging.Formatter(u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s')
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
