@@ -30,10 +30,6 @@ class ZapretInfoDB(object):
         file_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
         self.logger.addHandler(file_handler)
-        self.r.sadd('domains', 'test.ru')
-        self.r.sadd('test.ru', '0.1.1.1')
-        self.r.sadd('domains', 'test.ru2')
-        self.r.sadd('test.ru2', '0.1.1.2')
 
     def update_domains(self):
         # Получаем обновленный дамп реестра запрещенных сайтов с удаленного сервера по SFTP
