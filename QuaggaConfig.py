@@ -64,7 +64,7 @@ class QuaggaConfig(object):
         telnet.write('term len 0' + '\r\n')
         # Сложно объяснить почему, но здесь нужны две команды
         self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
-        #self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         return telnet
 
     def add_bgp_networks(self, set_of_networks):
@@ -113,7 +113,7 @@ class QuaggaConfig(object):
 
 
 
-#q = QuaggaConfig()
+q = QuaggaConfig()
 #q.read_current_networks()
 #q.add_bgp_networks({'0.1.1.1', '0.1.1.3'})
-#q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
+q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
