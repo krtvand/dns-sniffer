@@ -22,10 +22,8 @@ class QuaggaConfig(object):
         self.logger.setLevel(logging.INFO)
         formatter = logging.Formatter(u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s')
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(formatter)
         file_handler = logging.FileHandler('dns-sniffer.log')
-        file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
         self.logger.addHandler(file_handler)
@@ -64,40 +62,58 @@ class QuaggaConfig(object):
         telnet.write(quagga_password + '\r\n')
         telnet.expect([re.compile('.*#\s'), ], 3)
         telnet.write('term len 0' + '\r\n')
-        telnet.expect([re.compile('.*#\s'), ], 3)
+        # Сложно объяснить почему, но здесь нужны две команды
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        #self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         return telnet
 
     def add_bgp_networks(self, set_of_networks):
+        """
+
+        :param set_of_networks: Множество IP адресов, которые необхордимо занести в конфигурацию BGP
+        """
         net_mask = '32'
         telnet = self.telnet_call()
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         telnet.write("conf t\r")
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         telnet.write("router bgp 8941\r\n")
-        telnet.expect([re.compile('.*#\s'), ], 3)
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         for network in set_of_networks:
             telnet.write("network " + network + "/" + net_mask + "\r")
-            telnet.expect([re.compile('.*#\s'), ], 10)
+            self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 10))
             self.logger.info("added to quagga bgp network %s/%s" % (network, net_mask))
-        telnet.write("end\r")
-        telnet.write("write\r")
+        telnet.write('end\r')
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        telnet.write('write' + '\r')
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        telnet.write('exit' + '\r\n')
         telnet.close()
 
     def delete_bgp_networks(self, set_of_networks):
         net_mask = '32'
         telnet = self.telnet_call()
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         telnet.write("conf t\r")
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         telnet.write("router bgp 8941\r\n")
-        telnet.expect([re.compile('.*#\s'), ], 3)
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         for network in set_of_networks:
             telnet.write("no network " + network + "/" + net_mask + "\r")
-            telnet.expect([re.compile('.*#\s'), ], 10)
+            self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 10))
             self.logger.info('deleted from quagga bgp network %s/%s' % (network, net_mask))
         telnet.write("end\r")
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
         telnet.write("write\r")
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        self.logger.debug(telnet.expect([re.compile('.*#\s'), ], 3))
+        telnet.write('exit' + '\r\n')
         telnet.close()
 
 
 
-#q = QuaggaConfig()
+q = QuaggaConfig()
 #q.read_current_networks()
-#q.add_bgp_networks({'0.1.1.1', '0.1.1.2'})
-#q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
+#q.add_bgp_networks({'0.1.1.1', '0.1.1.3'})
+q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
