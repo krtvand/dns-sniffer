@@ -113,7 +113,7 @@ class QuaggaConfig(object):
 
 
 
-q = QuaggaConfig()
+#q = QuaggaConfig()
 #q.read_current_networks()
 #q.add_bgp_networks({'0.1.1.1', '0.1.1.3'})
-q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
+#q.delete_bgp_networks({'0.1.1.1', '0.1.1.2'})
