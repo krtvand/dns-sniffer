@@ -11,6 +11,8 @@ import pika
 import dpkt
 import redis
 
+from logging.handlers import RotatingFileHandler
+
 
 # Зададим параметры логгирования
 logger = logging.getLogger(__name__)
@@ -18,7 +20,7 @@ logger.setLevel(logging.INFO)
 formatter = logging.Formatter(u'%(filename)s[LINE:%(lineno)d]# %(levelname)-8s [%(asctime)s]  %(message)s')
 console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setFormatter(formatter)
-file_handler = logging.handlers.RotatingFileHandler('dns-sniffer.log', encoding='utf8', maxBytes=1000, backupCount=2)
+file_handler = logging.handlers.RotatingFileHandler('dns-sniffer.log', encoding='utf8', maxBytes=100000000, backupCount=2)
 file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
