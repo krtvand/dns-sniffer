@@ -33,10 +33,14 @@ r = redis.StrictRedis(host='localhost', port=6379, db=0)
 print ' [*] Waiting for messages. To exit press CTRL+C'
 
 def callback(ch, method, properties, body):
-    eth = dpkt.ethernet.Ethernet(body)
-    ip = eth.data
-    udp = ip.data
-    dns = dpkt.dns.DNS(udp.data)
+    try:
+        eth = dpkt.ethernet.Ethernet(body)
+        ip = eth.data
+        udp = ip.data
+        dns = dpkt.dns.DNS(udp.data)
+    except Exception as e:
+        logger.warning(e.message)
+        pass
     if dns.qr == 1 and len(dns.an) > 0:
         name = dns.an[0].name
         # idna - формат представления кириллических доменов в специальном виде типа xn--...
