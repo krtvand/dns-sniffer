@@ -2,6 +2,7 @@
 #!/usr/bin/python
 
 import logging
+import sys
 
 import paramiko
 import requests
@@ -26,9 +27,9 @@ class ZapretInfoChecker(object):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         formatter = logging.Formatter(u'%(levelname)-8s [%(asctime)s]  %(message)s')
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
-        file_handler = logging.FileHandler('ZapretInfoChecker.log')
+        file_handler = logging.FileHandler('zapret-info-checker.log')
         file_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
         self.logger.addHandler(file_handler)
