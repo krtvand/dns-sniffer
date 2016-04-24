@@ -3,6 +3,8 @@
 
 import logging
 import sys
+from multiprocessing import Pool, cpu_count
+import time
 
 import paramiko
 import requests
@@ -48,6 +50,19 @@ class ZapretInfoChecker(object):
             data_for_chek = zapret_info_xml.get_data_for_checker()
         return data_for_chek
 
+    def make_request(self, site):
+        result = {}
+        count = 1
+        try:
+            r = requests.get(site, timeout=5, verify=False)
+            result[site] = r.status_code
+            self.logger.debug('count = %s Checking %s, response code: %s' % (count, site, r.status_code))
+            count += 1
+        except RequestException as e:
+            result[site] = e
+            self.logger.warning('count = %s Checking %s, error: %s' % (count, site, e))
+            count += 1
+
     def check_availability(self):
         data_for_check = self.get_data_for_check()
         data_for_check_len = len(data_for_check)
@@ -70,8 +85,19 @@ class ZapretInfoChecker(object):
                 available_sites.add(key)
         self.logger.info('Overall available sites: %s' % len(available_sites))
 
+    def check_availability_mp(self):
+        data_for_check = self.get_data_for_check()
+        self.logger.info('Loaded %s sites for check availability' % len(data_for_check))
+        pool = Pool(cpu_count())
+        start_time = time.time()
+        results = pool.map(self.make_request, data_for_check)
+        self.logger.info("Elapsed time: {:.3f} sec".format(time.time() - start_time))
+        self.logger.info('results lenght: %s' % (len(results)))
+        pool.close()
+        pool.join()
+
 z = ZapretInfoChecker()
-z.check_availability()
+z.check_availability_mp()
 
 
 
