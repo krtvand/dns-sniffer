@@ -7,6 +7,9 @@ import xml.etree.ElementTree as etree
 from urlparse import urlparse
 import re
 
+# TODO
+# в одной реестрововй записи может содержаться несколько элементов URL,
+# т.е. вместо метода elem_content.find('url'), необходимо использовать findall
 
 class ZapretInfoXMLParser(object):
 
@@ -89,6 +92,9 @@ class ZapretInfoXMLParser(object):
                 elem_domain = elem_content.find('domain')
                 if elem_domain is not None:
                     domain = self.get_unicode_text_from_xml_element(elem_domain)
+                    scheme = urlparse(domain).scheme
+                    if not scheme:
+                        domain = u'http://' + domain
                     data_for_check.add(domain)
         return data_for_check
 
