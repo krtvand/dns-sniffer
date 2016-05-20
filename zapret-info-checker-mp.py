@@ -8,7 +8,7 @@
 """
 DUMP_HOST = '194.54.64.53'
 DUMP_HOST_SSH_LOGIN = 'icmrsu'
-DUMP_HOST_SSH_SECRET = 'gr@peb1ke'
+DUMP_HOST_SSH_SECRET = 'bl@ckbr@1n'
 DUMP_HOST_SSH_PORT = 22
 DUMP_FILE_PATH = '/gost-ssl/rzs/dump/dump.xml'
 
@@ -59,7 +59,7 @@ def make_request(site):
         result[site] = r.status_code
         # Если код ответа веб сервера 200, значит сайт доступен
         if r.status_code == 200:
-            logger.warning('Site is availble: %s, responce code: %s' %
+            logger.warning('Site is availble: %s responce code: %s' %
                            (site, r.status_code))
         logger.debug('Checking %s, response code: %s' % (site, r.status_code))
     # Обрабатываем ошибки модуля Requests
