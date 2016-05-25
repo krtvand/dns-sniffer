@@ -11,7 +11,7 @@ import subprocess
 
 import paramiko
 import xml.etree.ElementTree as etree
-from urlparse import urlparse
+from urlparse import urlparse, urlunparse
 
 class ZapretInfoXMLParser(object):
 
@@ -129,6 +129,17 @@ class ZapretInfoXMLParser(object):
             for url_elem in url_elems:
                 # Получаем юникод строку
                 url = self.get_unicode_text_from_xml_element(url_elem)
+                # Транслируем кириллические домены в IDNA формат,
+                # важно выделять домен до обрезания фрагмента "http://",
+                # т.к. после вырезания, функция urlparse.netloc не работает
+                parsed_url = urlparse(url)
+                if re.search(ur'[А-яёЁ]+', parsed_url.netloc) is not None:
+                    url3 = urlunparse((parsed_url.scheme, parsed_url.netloc.encode('idna'),
+                               parsed_url.path, parsed_url.params,
+                               parsed_url.query, parsed_url.fragment))
+                    url3 = re.sub(ur'^https?://', '', url3)
+                    print url3
+                    urls.add(url3)
                 # Если это https сайт, то его домен необходимо занести
                 # в отдельное множество, т.к. этого требует логика SquidGuard
                 if re.search(ur'^https://', url) is not None:
@@ -136,29 +147,37 @@ class ZapretInfoXMLParser(object):
                     # т.к. если обратиться по адресу www1.domain.ru,
                     # то SquidGuard пропустит такой запрос
                     domain_from_https = re.sub(ur'^www\d*\.', '', urlparse(url).netloc)
+                    # Конвертируем запись в формат idna
+                    domain_from_https = domain_from_https.encode('idna')
                     domain_from_https = u'.' + domain_from_https
                     domains_from_https.add(domain_from_https)
                 url = re.sub(ur'^https?://', '', url)
-                url = re.sub(ur'//$', '/', url)
+                # Убираем точку после домена в URL, например
+                # www.ispovednik.com./prilozhenie-no-1 => www.ispovednik.com/prilozhenie-no-1
                 url = re.sub(ur'^([^/]+)\.(/+.*)$', ur'\1\2', url)
-                url = re.sub(ur'^([^/]+)\.$', ur'\1', url)
-                url = re.sub(ur'^(.*/+)\.$', ur'\1', url)
+                # url = re.sub(ur'^([^/]+)\.$', ur'\1', url)
+                # urls.add(url)
+                url = re.sub(ur'^(.*/?)\.$', ur'\1', url)
                 # Добавляем в базу Squidguard такой же URL, но без ссылки на якорь.
                 # Пример: otk.eu/predislovie1.html#top -> otk.eu/predislovie1.html
-                url2 = re.sub(r'#.*$', '', url)
-                urls.add(url2)
+                urls.add(url)
+                url = re.sub(r'#.*$', '', url)
+                urls.add(url)
+                # Убираем вопросительный знак с конца URL
+                url = re.sub(r'(.*)\?$', r'\1', url)
+                urls.add(url)
                 # В SquidGuard есть особненность, когда он самостоятельно
                 # убирает два слэша в url перед тем, как его отфильтровать.
                 # Поэтому мы заносим в базу такой же адрес, но с одинарным слэшом
-                url3 = re.sub('//', '/', url)
-                urls.add(url3)
-                urls.add(url)
+                #url3 = re.sub('//', '/', url)
+                #urls.add(url3)
                 # Кириллические записи мы храним в базе SquidGuard
                 # как в utf-8 формате, так и в cp1251.
                 # Т.к. SquidGuard чувствителен к кодировке
                 if re.search(ur'[А-яёЁ]+', url) is not None:
                     url = url.replace(ur' ', ur'%20')
                     urls_non_ascii.add(url)
+
             # Переходим к обработке доменов только
             # в том случае, если отсутствует url запись
             if url_elems:
@@ -177,6 +196,8 @@ class ZapretInfoXMLParser(object):
                     if re.search(ur'[А-яёЁ]+', domain) is not None:
                         domain = domain.replace(ur' ', ur'%20')
                         domains_non_ascii.add(domain)
+                        # Сохраняем домен еще и в idna формате
+                        domains.add(domain.encode('idna'))
                     domains.add(domain)
             ip_elems = elem_content.findall('ip')
         self.logger.debug(u'Указателей всего: %s' % len(urls))
@@ -185,18 +206,18 @@ class ZapretInfoXMLParser(object):
         self.logger.debug(u'Доменов содержащих кириллицу %s' % len(domains_non_ascii))
         self.logger.debug(u'Доменов из https ссылок %s' % len(domains_from_https))
         # Сохраняем результаты в файл
-        with open('/home/andrew/pornurls', 'wb') as f:
+        with open('/home/andrew/utf-8_urls', 'wb') as f:
             for url in urls:
                 url = urllib.unquote(url.encode('utf-8'))
                 url = url.replace(r' ', r'%20')
                 f.write("%s\n" % url)
-        with open('/home/andrew/cp1251urls', 'wb') as f:
+        with open('/home/andrew/cp1251_urls', 'wb') as f:
             for url in urls_non_ascii:
                 f.write("%s\n" % url.encode('cp1251'))
-        with open('/home/andrew/domains', 'wb') as f:
+        with open('/home/andrew/utf-8_domains', 'wb') as f:
             for domain in domains:
                 f.write("%s\n" % domain.encode('utf-8'))
-        with open('/home/andrew/cp1251domains', 'wb') as f:
+        with open('/home/andrew/cp1251_domains', 'wb') as f:
             for domain in domains_non_ascii:
                 f.write("%s\n" % domain.encode('cp1251'))
 
